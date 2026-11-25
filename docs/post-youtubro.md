@@ -38,7 +38,7 @@ Youtubro adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Mus
 
 **[⬇️ Download Youtubro versi terbaru (APK)](https://github.com/bozid95/youtubro/releases/latest)**
 
-Di halaman tersebut, pilih file **`youtubro-release.apk`**. Versi terbaru saat tulisan ini dibuat adalah **1.0.2**.
+Di halaman tersebut, pilih file **`youtubro-release.apk`**. Versi terbaru saat tulisan ini dibuat adalah **1.0.3**.
 
 Syarat: HP Android **8.0 (Oreo) atau lebih baru**.
 
