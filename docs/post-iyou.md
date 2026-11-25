@@ -34,6 +34,7 @@ iYou adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Music, 
 - **Normalisasi volume.** Lagu yang terlalu keras atau terlalu pelan disamakan volumenya. Fitur ini bisa dimatikan.
 - **Versi lagu otomatis.** Kalau sebuah video klip punya versi audio resminya, yang diputar adalah versi audio itu, karena biasanya suaranya lebih jernih.
 - **Hemat kuota.** Lagu yang pernah diputar disimpan di cache, jadi tidak perlu diunduh ulang.
+- **Update dari dalam aplikasi.** Kalau ada versi baru, kartu *Versi baru tersedia* muncul di Beranda. Ketuk **Download & update**, dan versi baru terpasang di atas yang lama. Lagu favorit dan riwayat tetap aman.
 
 ## Download
 
@@ -52,6 +53,10 @@ Syarat: HP Android **8.0 (Oreo) atau lebih baru**.
 5. Saat pertama kali dibuka, izinkan **notifikasi** supaya kontrol musik muncul di notifikasi dan layar kunci.
 
 > Muncul peringatan dari Play Protect? Itu wajar untuk aplikasi yang tidak berasal dari Play Store. Ketuk **Tetap install**.
+
+### Cara Update
+
+Tidak perlu uninstall. Buka iYou, lalu ketuk **Download & update** di kartu yang muncul di Beranda. Anda juga bisa ke **Koleksi**, gulir ke bawah, lalu ketuk **Periksa update**. Pertama kali, Android akan meminta izin *Instal aplikasi tidak dikenal* untuk iYou. Aktifkan izin itu, lalu kembali dan ketuk tombolnya sekali lagi.
 
 ## Tips Pemakaian
 

@@ -13,8 +13,9 @@ android {
         applicationId = "pro.iyou.music"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.1.0"
+        // CI sets these: the tag (v1.2.0 -> 1.2.0) and the run number, so every build installs over the last
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = System.getenv("VERSION_NAME") ?: "0.1.0"
     }
 
     // Release signing comes from env vars (set by CI from repo secrets). Without them the

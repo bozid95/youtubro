@@ -108,6 +108,7 @@ fun LibraryScreen(contentPadding: PaddingValues) {
                 )
             }
         }
+        item { pro.iyou.update.VersionFooter() }
     }
 }
 

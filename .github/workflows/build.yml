@@ -40,10 +40,14 @@ jobs:
 
       - name: Build debug and release APKs
         env:
+          VERSION_CODE: ${{ github.run_number }}
+          VERSION_NAME: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || format('0.0.{0}-dev', github.run_number) }}
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
           SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
         run: |
+          export VERSION_NAME="${VERSION_NAME#v}"
+          if [ -z "$SIGNING_KEYSTORE" ]; then echo "::warning::No signing secrets: release APK uses a throwaway debug key, so it will not update over earlier installs"; fi
           chmod +x gradlew
           ./gradlew assembleDebug assembleRelease --stacktrace
 

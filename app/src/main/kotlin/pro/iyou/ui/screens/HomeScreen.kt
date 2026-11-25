@@ -102,6 +102,7 @@ fun HomeScreen(onOpen: (Collection) -> Unit, contentPadding: PaddingValues) {
                     color = Palette.TextMuted,
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 4.dp),
                 )
+                pro.iyou.update.UpdateBanner()
             }
             when (val s = state) {
                 Load.Loading -> item { Loading() }

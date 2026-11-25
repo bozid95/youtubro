@@ -14,6 +14,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import pro.iyou.playback.PlayerConnection
 import pro.iyou.ui.IyouRoot
 import pro.iyou.ui.theme.IyouTheme
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
 
         player = PlayerConnection(this, lifecycleScope, app.container.repository, app.container.settings)
         if (savedInstanceState == null) links.value = DeepLink.from(intent)
+        lifecycleScope.launch { app.container.updater.check() }
 
         // Android 13+ asks before showing the media notification
         if (Build.VERSION.SDK_INT >= 33 &&
