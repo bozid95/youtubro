@@ -1,7 +1,7 @@
 ---
-title: "iYou: Aplikasi Musik YouTube Tanpa Iklan, Bisa Diputar di Latar Belakang"
+title: "iYou: Musik & Video YouTube Tanpa Iklan, Bisa Diputar di Latar Belakang"
 date: 2026-11-25
-description: "Aplikasi Android buatan sendiri untuk mendengarkan musik dari YouTube tanpa iklan, tetap jalan saat layar mati, dengan tampilan yang minimalis."
+description: "Aplikasi Android buatan sendiri untuk mendengarkan musik dan menonton video YouTube tanpa iklan, tetap jalan saat layar mati, dengan tampilan yang minimalis."
 tags: [android, kotlin, open-source, musik]
 ---
 
@@ -9,7 +9,7 @@ tags: [android, kotlin, open-source, musik]
 
 Pernah kesal karena lagu di YouTube berhenti begitu layar HP dimatikan? Atau karena iklan muncul di tengah lagu? Saya juga, jadi saya membuat aplikasi sendiri: **iYou**.
 
-iYou adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Music. Aplikasi ini **tanpa iklan**, **tetap memutar di latar belakang** dan **tampilannya sederhana**. Fiturnya sengaja dibuat sedikit: hanya yang benar-benar dipakai sehari-hari.
+iYou adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Music, dan kalau mau, sekalian menonton videonya. Aplikasi ini **tanpa iklan**, **tetap memutar di latar belakang** dan **tampilannya sederhana**. Fiturnya sengaja dibuat sedikit: hanya yang benar-benar dipakai sehari-hari.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/home.png" width="23%" alt="Beranda" />
@@ -26,9 +26,14 @@ iYou adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Music. 
 - **Pencarian** lagu, video, album dan playlist, lengkap dengan saran kata kunci dan riwayat pencarian.
 - **Pemutar layar penuh** dengan warna latar yang mengikuti sampul lagu, plus shuffle, repeat dan pengaturan antrean.
 - **Radio otomatis.** Setelah satu lagu diputar, lagu-lagu yang mirip langsung masuk ke antrean.
-- **Koleksi lokal.** Simpan lagu favorit dengan ♡ dan lihat riwayat putar. Tidak perlu login atau akun Google.
+- **Koleksi lokal.** Simpan lagu favorit dengan ♡ dan lihat riwayat putar. Tidak perlu login atau akun Google. Datanya tersimpan di HP Anda dan akan hilang kalau aplikasi di-uninstall.
 - **Buka tautan YouTube langsung.** Bagikan link YouTube atau YouTube Music ke iYou, dan lagunya langsung diputar.
-- **Ringan dan hemat kuota.** Yang diambil hanya audionya, dan lagu yang sudah pernah diputar disimpan di cache.
+- **Mode Lagu atau Video.** Mode **Lagu** (bawaan) hanya mengambil audio, jadi hemat kuota. Mode **Video** menampilkan videonya sampai 720p.
+- **Layar penuh landscape.** Di mode Video, miringkan HP atau ketuk ⛶ untuk menonton layar penuh seperti di YouTube.
+- **Kualitas audio terlihat.** Pemutar menampilkan format yang sedang diputar, misalnya *Opus · 160 kbps*. Lagu yang hanya tersedia dengan kualitas rendah ditandai.
+- **Normalisasi volume.** Lagu yang terlalu keras atau terlalu pelan disamakan volumenya. Fitur ini bisa dimatikan.
+- **Versi lagu otomatis.** Kalau sebuah video klip punya versi audio resminya, yang diputar adalah versi audio itu, karena biasanya suaranya lebih jernih.
+- **Hemat kuota.** Lagu yang pernah diputar disimpan di cache, jadi tidak perlu diunduh ulang.
 
 ## Download
 
@@ -52,6 +57,8 @@ Syarat: HP Android **8.0 (Oreo) atau lebih baru**.
 
 - **Tekan lama** atau ketuk **⋮** pada sebuah lagu untuk *Putar berikutnya*, *Tambah ke antrean*, *Mulai radio* atau *Suka*.
 - **Geser ke atas** mini player untuk membuka pemutar layar penuh. Tekan **Back** untuk mengecilkannya lagi.
+- Ketuk **Lagu | Video** di bagian atas pemutar untuk pindah mode. Saat layar mati, mode Video otomatis hanya memutar suaranya.
+- Ketuk label format (misalnya *Opus · 160 kbps*) untuk melihat detail kualitas dan menyalakan atau mematikan **Normalisasi volume**.
 - Di aplikasi YouTube, ketuk **Bagikan → iYou**, dan video tersebut langsung diputar sebagai musik.
 - Jika beranda gagal dimuat, **tarik layar ke bawah** untuk memuat ulang. Jika masih gagal, coba matikan VPN, Private DNS atau ad blocker sebentar.
 
