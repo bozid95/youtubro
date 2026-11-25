@@ -43,10 +43,17 @@ import pro.iyou.ui.components.TrackRow
 import pro.iyou.ui.theme.Palette
 import java.util.Calendar
 
+/** Short technical reason shown under an error, so problems can be reported. */
+fun Throwable.describe(): String {
+    timber.log.Timber.w(this)
+    val root = generateSequence(this) { it.cause }.last()
+    return "${root::class.java.simpleName}: ${root.message.orEmpty().take(180)}"
+}
+
 sealed interface Load<out T> {
     data object Loading : Load<Nothing>
     data class Ready<T>(val value: T) : Load<T>
-    data class Failed(val message: String) : Load<Nothing>
+    data class Failed(val message: String, val detail: String? = null) : Load<Nothing>
 }
 
 class HomeViewModel(private val repo: MusicRepository) : ViewModel() {
@@ -60,7 +67,7 @@ class HomeViewModel(private val repo: MusicRepository) : ViewModel() {
         if (pull) refreshing.value = true else _state.value = Load.Loading
         _state.value = repo.home().fold(
             onSuccess = { Load.Ready(it) },
-            onFailure = { Load.Failed("Tidak bisa memuat beranda. Periksa koneksi.") },
+            onFailure = { Load.Failed("Tidak bisa memuat beranda.", it.describe()) },
         )
         refreshing.value = false
     }
@@ -98,7 +105,7 @@ fun HomeScreen(onOpen: (Collection) -> Unit, contentPadding: PaddingValues) {
             }
             when (val s = state) {
                 Load.Loading -> item { Loading() }
-                is Load.Failed -> item { Message(s.message, onRetry = { vm.load() }) }
+                is Load.Failed -> item { Message(s.message, detail = s.detail, onRetry = { vm.load() }) }
                 is Load.Ready -> s.value.forEachIndexed { i, shelf ->
                     item(key = "title$i") { SectionTitle(shelf.title) }
                     if (shelf.tracks.isNotEmpty()) {

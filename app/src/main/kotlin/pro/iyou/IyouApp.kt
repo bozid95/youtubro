@@ -32,7 +32,7 @@ class IyouApp : Application(), SingletonImageLoader.Factory {
         val locale = Locale.getDefault()
         YouTube.locale = YouTubeLocale(
             gl = locale.country.takeIf { it.length == 2 } ?: "US",
-            hl = locale.toLanguageTag().ifBlank { "en" },
+            hl = locale.language.ifBlank { "en" },
         )
 
         // A guest "visitor id" keeps YouTube from treating every request as a new bot.

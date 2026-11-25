@@ -47,6 +47,11 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug assembleRelease --stacktrace
 
+      # Asks YouTube Music for real from the runner and prints what came back (never fails the build)
+      - name: InnerTube smoke test
+        continue-on-error: true
+        run: ./gradlew :innertube:testDebugUnitTest --tests '*SmokeTest*' | grep -E "SMOKE|FAILED|BUILD" || true
+
       - name: Rename APKs
         run: |
           mkdir -p out

@@ -255,13 +255,21 @@ fun Loading(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun Message(text: String, modifier: Modifier = Modifier, onRetry: (() -> Unit)? = null) {
+fun Message(text: String, modifier: Modifier = Modifier, detail: String? = null, onRetry: (() -> Unit)? = null) {
     Column(
         modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(text, style = MaterialTheme.typography.bodyMedium, color = Palette.TextMuted)
+        if (!detail.isNullOrBlank()) {
+            Text(
+                detail,
+                style = MaterialTheme.typography.bodySmall,
+                color = Palette.TextFaint,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            )
+        }
         if (onRetry != null) {
             TextButton(onClick = onRetry) { Text("Coba lagi", color = Palette.Text) }
         }

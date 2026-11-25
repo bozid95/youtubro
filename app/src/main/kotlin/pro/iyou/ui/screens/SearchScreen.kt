@@ -103,7 +103,7 @@ class SearchViewModel(
             _results.value = Load.Loading
             _results.value = repo.search(text, kind.value).fold(
                 onSuccess = { Load.Ready(it) },
-                onFailure = { Load.Failed("Pencarian gagal. Coba lagi.") },
+                onFailure = { Load.Failed("Pencarian gagal.", it.describe()) },
             )
         }
     }
@@ -250,7 +250,7 @@ fun SearchScreen(
                 }
                 else -> when (val r = results) {
                     Load.Loading -> item { Loading() }
-                    is Load.Failed -> item { Message(r.message, onRetry = { vm.submit() }) }
+                    is Load.Failed -> item { Message(r.message, detail = r.detail, onRetry = { vm.submit() }) }
                     is Load.Ready -> {
                         val tracks = r.value.tracks
                         if (tracks.isEmpty() && r.value.collections.isEmpty()) {

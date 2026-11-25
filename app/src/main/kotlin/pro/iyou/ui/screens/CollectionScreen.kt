@@ -60,7 +60,7 @@ class CollectionViewModel(private val repo: MusicRepository, private val target:
         _state.value = Load.Loading
         _state.value = repo.collection(target).fold(
             onSuccess = { Load.Ready(it) },
-            onFailure = { Load.Failed("Tidak bisa membuka ${if (target.kind == Collection.Kind.Album) "album" else "playlist"} ini.") },
+            onFailure = { Load.Failed("Tidak bisa membuka ${if (target.kind == Collection.Kind.Album) "album" else "playlist"} ini.", it.describe()) },
         )
     }
 }
@@ -125,7 +125,7 @@ fun CollectionScreen(target: Collection, onBack: () -> Unit, contentPadding: Pad
             }
             when (val s = state) {
                 Load.Loading -> item { Loading() }
-                is Load.Failed -> item { Message(s.message, onRetry = { vm.load() }) }
+                is Load.Failed -> item { Message(s.message, detail = s.detail, onRetry = { vm.load() }) }
                 is Load.Ready -> itemsIndexed(s.value.tracks) { i, t ->
                     TrackRow(
                         t,
