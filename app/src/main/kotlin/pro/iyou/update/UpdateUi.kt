@@ -38,8 +38,6 @@ fun UpdateBanner(modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val updater = context.app.container.updater
     val update by updater.available.collectAsState()
-    val phase by updater.phase.collectAsState()
-    val scope = rememberCoroutineScope()
     val u = update ?: return
 
     Column(
@@ -72,6 +70,22 @@ fun UpdateBanner(modifier: Modifier = Modifier) {
             )
         }
 
+        UpdateControls(u)
+    }
+}
+
+/**
+ * The update button and what follows it: download progress, then Android's install prompt.
+ * Shared by the Home card and the About page.
+ */
+@Composable
+fun UpdateControls(u: AppUpdate, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val updater = context.app.container.updater
+    val phase by updater.phase.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         when (val p = phase) {
             is Updater.Phase.Downloading -> {
                 LinearProgressIndicator(
@@ -82,50 +96,35 @@ fun UpdateBanner(modifier: Modifier = Modifier) {
                 )
                 Text("Mengunduh… ${(p.progress * 100).toInt()}%", style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted)
             }
-            Updater.Phase.Installing -> Text("Memasang… ikuti konfirmasi dari Android.", style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted)
+            Updater.Phase.Installing -> Text(
+                "Memasang… ketuk Update / Install di konfirmasi Android.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Palette.TextMuted,
+            )
             else -> {
                 if (p is Updater.Phase.Failed) {
                     Text(p.message, style = MaterialTheme.typography.bodySmall, color = Palette.Accent)
                 }
-                val allowed = updater.canInstall()
                 Button(
                     onClick = {
+                        // asked at click time: the user may have just come back from Settings
                         if (!updater.canInstall()) updater.openInstallPermissionSettings(context)
                         else scope.launch { updater.downloadAndInstall(u) }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Palette.Text, contentColor = Palette.Background),
+                    colors = ButtonDefaults.buttonColors(containerColor = Palette.Accent, contentColor = Palette.Background),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(if (allowed) "Download & update" else "Izinkan pemasangan, lalu update")
+                    Icon(Icons.Rounded.SystemUpdate, null, modifier = Modifier.size(18.dp))
+                    Text("  Update ke ${u.version}")
+                }
+                if (!updater.canInstall()) {
+                    Text(
+                        "Pertama kali, Android akan meminta izin \"Instal aplikasi tidak dikenal\" untuk Youtubro. Aktifkan, lalu kembali dan ketuk Update lagi.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Palette.TextMuted,
+                    )
                 }
             }
-        }
-    }
-}
-
-/** Version line with a manual "check now", for the bottom of Koleksi. */
-@Composable
-fun VersionFooter(modifier: Modifier = Modifier) {
-    val updater = LocalContext.current.app.container.updater
-    val phase by updater.phase.collectAsState()
-    val update by updater.available.collectAsState()
-    val scope = rememberCoroutineScope()
-
-    Column(
-        modifier.fillMaxWidth().padding(vertical = 28.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text("Youtubro ${updater.currentVersion}", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
-        val status = when (val p = phase) {
-            Updater.Phase.Checking -> "Memeriksa…"
-            Updater.Phase.UpToDate -> "Sudah versi terbaru"
-            is Updater.Phase.Failed -> p.message
-            else -> update?.let { "Versi ${it.version} tersedia, lihat Beranda" }
-        }
-        status?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted) }
-        TextButton(onClick = { scope.launch { updater.check(force = true) } }) {
-            Text("Periksa update", color = Palette.Text)
         }
     }
 }

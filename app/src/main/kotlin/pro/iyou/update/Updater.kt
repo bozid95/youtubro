@@ -52,6 +52,7 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
 
     /** [force] = the user asked; otherwise at most every few hours, quietly. */
     suspend fun check(force: Boolean = false) = withContext(Dispatchers.IO) {
+        if (_phase.value is Phase.Downloading || _phase.value is Phase.Installing) return@withContext
         val now = System.currentTimeMillis()
         if (!force && now - prefs.getLong(KEY_LAST_CHECK, 0) < CHECK_EVERY_MS) return@withContext
         if (force) _phase.value = Phase.Checking

@@ -63,6 +63,7 @@ import pro.iyou.ui.player.MiniPlayer
 import pro.iyou.ui.screens.CollectionScreen
 import pro.iyou.ui.screens.HomeScreen
 import pro.iyou.ui.screens.LibraryScreen
+import pro.iyou.ui.screens.AboutScreen
 import pro.iyou.ui.screens.SearchScreen
 import pro.iyou.ui.theme.Palette
 
@@ -71,6 +72,7 @@ val LocalPlayer = staticCompositionLocalOf<PlayerConnection> { error("No PlayerC
 @Serializable data object HomeRoute
 @Serializable data object SearchRoute
 @Serializable data object LibraryRoute
+@Serializable data object AboutRoute
 @Serializable data class CollectionRoute(
     val id: String,
     val kind: String,
@@ -138,7 +140,10 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
                         onRequestHandled = { searchRequest = null },
                     )
                 }
-                composable<LibraryRoute> { LibraryScreen(contentPadding = bottomSpace) }
+                composable<LibraryRoute> {
+                    LibraryScreen(contentPadding = bottomSpace, onOpenAbout = { nav.navigate(AboutRoute) })
+                }
+                composable<AboutRoute> { AboutScreen(onBack = { nav.popBackStack() }, contentPadding = bottomSpace) }
                 composable<CollectionRoute> { entry ->
                     CollectionScreen(
                         target = entry.toRoute<CollectionRoute>().toCollection(),
