@@ -16,7 +16,7 @@ sealed interface DeepLink {
             return when (intent.action) {
                 Intent.ACTION_VIEW -> intent.data?.let(::fromUri)
                 Intent.ACTION_SEND -> intent.getStringExtra(Intent.EXTRA_TEXT)?.let { text ->
-                    Regex("https?://\S+").find(text)?.value?.let { fromUri(Uri.parse(it)) }
+                    Regex("""https?://\S+""").find(text)?.value?.let { fromUri(Uri.parse(it)) }
                         ?: Search(text.trim()).takeIf { text.isNotBlank() }
                 }
                 else -> null
