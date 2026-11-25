@@ -107,7 +107,7 @@ fun HomeScreen(onOpen: (Collection) -> Unit, contentPadding: PaddingValues) {
                                 // the first shelf ("Quick picks") reads best as a paged list
                                 LazyHorizontalGrid(
                                     rows = GridCells.Fixed(4),
-                                    modifier = Modifier.fillMaxWidth().height(4 * 64.dp),
+                                    modifier = Modifier.fillMaxWidth().height(64.dp * 4),
                                 ) {
                                     itemsIndexed(shelf.tracks) { _, t ->
                                         TrackRow(

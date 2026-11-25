@@ -29,8 +29,8 @@ fun Track.toEntity() = SongEntity(id = id, title = title, artist = artist, thumb
 /** YouTube thumbnails carry their size in the URL; ask for a sharper one. */
 fun String.sized(px: Int): String = when {
     contains("googleusercontent.com") || contains("ggpht.com") ->
-        replace(Regex("=w\d+-h\d+.*$"), "=w$px-h$px-l90-rj")
-    contains("i.ytimg.com") -> replace(Regex("/(default|mqdefault|hqdefault|sddefault)\.jpg"), "/hqdefault.jpg")
+        replace(Regex("""=w\d+-h\d+.*$"""), "=w$px-h$px-l90-rj")
+    contains("i.ytimg.com") -> replace(Regex("""/(default|mqdefault|hqdefault|sddefault)\.jpg"""), "/hqdefault.jpg")
     else -> this
 }
 
