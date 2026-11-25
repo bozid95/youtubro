@@ -121,6 +121,13 @@ internal class InnerTubeXStreams(
             headers = stream.headers,
             expiresAtMs = expiresAt,
             client = "InnerTubeX · ${stream.clientName}",
+            info = StreamInfo(
+                itag = stream.itag,
+                codec = StreamInfo.codecOf(stream.mimeType ?: stream.codecs, stream.itag),
+                kbps = stream.bitrate?.takeIf { it > 0 }?.let { it / 1000 } ?: StreamInfo.KNOWN_KBPS[stream.itag],
+                loudnessDb = stream.loudnessDb,
+                client = stream.clientName,
+            ),
         )
     }
 

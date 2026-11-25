@@ -1,6 +1,7 @@
 package com.music.innertube.models
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class PlaylistPanelRenderer(
@@ -17,5 +18,11 @@ data class PlaylistPanelRenderer(
     data class Content(
         val playlistPanelVideoRenderer: PlaylistPanelVideoRenderer?,
         val automixPreviewVideoRenderer: AutomixPreviewVideoRenderer?,
+        /**
+         * A song that exists both as a music video and as an audio track ("Song / Video" toggle):
+         * `{ primaryRenderer: {playlistPanelVideoRenderer}, counterpart: [{counterpartRenderer: {playlistPanelVideoRenderer}}] }`.
+         * Kept raw and decoded leniently, so an odd shape here can't break the whole queue.
+         */
+        val playlistPanelVideoWrapperRenderer: JsonObject? = null,
     )
 }

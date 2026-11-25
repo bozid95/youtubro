@@ -2,6 +2,7 @@ package pro.iyou.playback
 
 import android.app.PendingIntent
 import android.content.Intent
+import android.media.audiofx.LoudnessEnhancer
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.media3.common.AudioAttributes
@@ -28,6 +29,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import pro.iyou.MainActivity
@@ -35,6 +37,7 @@ import pro.iyou.R
 import pro.iyou.app
 import timber.log.Timber
 import java.io.IOException
+import kotlin.math.pow
 
 /**
  * Owns the player. Because it is a foreground [MediaSessionService], music keeps going with the
@@ -50,6 +53,9 @@ class PlaybackService : MediaSessionService() {
 
     /** media ids already retried once after a stream error, so a dead song can't loop forever */
     private val retried = mutableSetOf<String>()
+
+    /** boosts quiet songs when normalising; loud ones are simply turned down with the player volume */
+    private var enhancer: LoudnessEnhancer? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -77,8 +83,13 @@ class PlaybackService : MediaSessionService() {
         player.addListener(object : Player.Listener {
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 retried.clear()
+                applyLoudness()
                 val track = mediaItem?.toTrack() ?: return
                 scope.launch(Dispatchers.IO) { container.repository.markPlayed(track) }
+            }
+
+            override fun onAudioSessionIdChanged(audioSessionId: Int) {
+                attachEnhancer(audioSessionId)
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -98,6 +109,12 @@ class PlaybackService : MediaSessionService() {
                 }
             }
         })
+
+        attachEnhancer(player.audioSessionId)
+        // the loudness of a song is known once its stream is resolved, which can be after it started
+        scope.launch {
+            combine(container.streams.info, container.settings.normalize) { _, _ -> }.collect { applyLoudness() }
+        }
 
         val openApp = PendingIntent.getActivity(
             this, 0,
@@ -147,6 +164,32 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    private fun attachEnhancer(sessionId: Int) {
+        enhancer?.release()
+        enhancer = if (sessionId == C.AUDIO_SESSION_ID_UNSET) null else
+            runCatching { LoudnessEnhancer(sessionId) }.onFailure { Timber.w(it, "LoudnessEnhancer") }.getOrNull()
+        applyLoudness()
+    }
+
+    /**
+     * Volume normalisation like the YouTube apps: YouTube reports how far each track sits from its
+     * loudness target. Louder tracks are turned down by that much; quieter ones get up to +6 dB back.
+     */
+    private fun applyLoudness() {
+        val container = app.container
+        val id = player.currentMediaItem?.mediaId
+        val loudness = if (container.settings.normalize.value && id != null) {
+            container.streams.info.value[id]?.loudnessDb
+        } else null
+        val gainDb = loudness?.let { (-it).coerceIn(-MAX_CUT_DB, MAX_BOOST_DB) } ?: 0.0
+
+        player.volume = if (gainDb < 0) 10.0.pow(gainDb / 20).toFloat() else 1f
+        enhancer?.runCatching {
+            setTargetGain(if (gainDb > 0) (gainDb * 100).toInt() else 0)
+            enabled = gainDb > 0
+        }
+    }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = session
 
     override fun onTaskRemoved(rootIntent: Intent?) {
@@ -162,6 +205,8 @@ class PlaybackService : MediaSessionService() {
             release()
         }
         session = null
+        enhancer?.release()
+        enhancer = null
         cache.release()
         scope.cancel()
         super.onDestroy()
@@ -169,5 +214,7 @@ class PlaybackService : MediaSessionService() {
 
     companion object {
         const val SCHEME = "yt"
+        const val MAX_CUT_DB = 15.0
+        const val MAX_BOOST_DB = 6.0
     }
 }

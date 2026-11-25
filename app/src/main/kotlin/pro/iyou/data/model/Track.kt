@@ -12,6 +12,8 @@ data class Track(
     val artist: String,
     val thumbnail: String,
     val durationSec: Int? = null,
+    /** a music video rather than an audio track; the player looks for the song version first */
+    val isVideo: Boolean = false,
 )
 
 fun SongItem.toTrack() = Track(
@@ -20,6 +22,7 @@ fun SongItem.toTrack() = Track(
     artist = artists.joinToString(", ") { it.name },
     thumbnail = thumbnail,
     durationSec = duration,
+    isVideo = isVideoSong,
 )
 
 fun SongEntity.toTrack() = Track(id, title, artist, thumbnail, durationSec)

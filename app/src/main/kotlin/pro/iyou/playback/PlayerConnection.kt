@@ -73,16 +73,19 @@ class PlayerConnection(
     /** Open a song from a link: look it up, then play it with its radio queued behind. */
     suspend fun playVideoId(videoId: String) {
         connected.await()
-        val queue = repository.radio(videoId)
-        if (queue.isEmpty()) return
-        val index = queue.indexOfFirst { it.id == videoId }.coerceAtLeast(0)
-        play(queue, index)
+        val radio = repository.radio(videoId)
+        if (radio.tracks.isEmpty()) return
+        play(radio.tracks, radio.currentIndex)
     }
 
     /** Play a list as the queue, starting at [index]. */
     fun play(tracks: List<Track>, index: Int = 0) {
-        val c = controller ?: return
         radioJob?.cancel()
+        start(tracks, index)
+    }
+
+    private fun start(tracks: List<Track>, index: Int) {
+        val c = controller ?: return
         c.setMediaItems(tracks.map { it.toMediaItem() }, index, 0)
         c.prepare()
         c.play()
@@ -90,9 +93,18 @@ class PlayerConnection(
 
     /** Play one song now and fill the queue with YouTube Music's radio for it. */
     fun playRadio(track: Track) {
-        play(listOf(track))
+        radioJob?.cancel()
+        if (track.isVideo) {
+            // a music video: fetch the radio first, it swaps in the song version when there is one
+            radioJob = scope.launch {
+                val radio = repository.radio(track.id)
+                if (radio.tracks.isEmpty()) start(listOf(track), 0) else start(radio.tracks, radio.currentIndex)
+            }
+            return
+        }
+        start(listOf(track), 0)
         radioJob = scope.launch {
-            val related = repository.radio(track.id).filter { it.id != track.id }
+            val related = repository.radio(track.id).tracks.filter { it.id != track.id }
             val c = controller ?: return@launch
             if (c.currentMediaItem?.mediaId == track.id && related.isNotEmpty()) {
                 c.addMediaItems(related.map { it.toMediaItem() })

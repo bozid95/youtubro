@@ -7,6 +7,7 @@ import com.music.innertube.YouTube
 import com.music.innertube.models.YouTubeClient
 import com.music.innertube.models.response.PlayerResponse
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -21,6 +22,7 @@ data class ResolvedStream(
     val headers: Map<String, String>,
     val expiresAtMs: Long,
     val client: String,
+    val info: StreamInfo,
 )
 
 /**
@@ -39,6 +41,10 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
         poTokens.poTokenFor(videoId, sessionId)
     }
     private val cache = ConcurrentHashMap<String, ResolvedStream>()
+    private val infoStore = StreamInfoStore(context)
+
+    /** Format and loudness of every song resolved so far, by video id. */
+    val info: StateFlow<Map<String, StreamInfo>> = infoStore.all
 
     suspend fun prewarm() {
         runCatching { innerTubeX.prewarm() }.onFailure { Timber.w(it, "InnerTubeX prewarm failed") }
@@ -52,15 +58,22 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
         cache[videoId]?.takeIf { it.expiresAtMs - System.currentTimeMillis() > SAFETY_MARGIN_MS }
             ?.let { return@withContext it }
 
-        val resolved = runCatching { innerTubeX.resolve(videoId) }
+        val fromX = runCatching { innerTubeX.resolve(videoId) }
             .onFailure { Timber.w(it, "InnerTubeX failed for $videoId") }
             .getOrNull()
-            ?: clientWalk(videoId)
-            ?: newPipeFallback(videoId)
-            ?: throw IOException("No playable stream for $videoId")
+        // InnerTubeX takes the best its client offered; if that client only had a thin stream, see
+        // whether the client walk can find Opus 251 / AAC 140 before settling for it
+        val resolved = when {
+            fromX != null && !fromX.info.isLow -> fromX
+            else -> clientWalk(videoId)?.takeIf { fromX == null || (it.info.kbps ?: 0) > (fromX.info.kbps ?: 0) }
+                ?: fromX
+                ?: newPipeFallback(videoId)
+                ?: throw IOException("No playable stream for $videoId")
+        }
 
-        Timber.i("Stream for $videoId via ${resolved.client}")
+        Timber.i("Stream for $videoId via ${resolved.client}: itag ${resolved.info.itag} ${resolved.info.label}")
         cache[videoId] = resolved
+        infoStore.put(videoId, resolved.info)
         resolved
     }
 
@@ -104,6 +117,13 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
                         headers = headers,
                         expiresAtMs = System.currentTimeMillis() + streaming.expiresInSeconds * 1000L,
                         client = client.clientName,
+                        info = StreamInfo(
+                            itag = format.itag,
+                            codec = StreamInfo.codecOf(format.mimeType, format.itag),
+                            kbps = format.bitrate.takeIf { it > 0 }?.let { it / 1000 },
+                            loudnessDb = response.playerConfig?.audioConfig?.loudnessDb ?: format.loudnessDb,
+                            client = client.clientName,
+                        ),
                     )
                 }
             } catch (e: Exception) {
@@ -115,22 +135,24 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
 
     private fun newPipeFallback(videoId: String): ResolvedStream? {
         val streams = runCatching { YouTube.getNewPipeStreamUrls(videoId) }.getOrDefault(emptyList())
-        val url = PREFERRED_AUDIO_ITAGS.firstNotNullOfOrNull { itag -> streams.find { it.first == itag }?.second }
+        val (itag, url) = PREFERRED_AUDIO_ITAGS.firstNotNullOfOrNull { wanted -> streams.find { it.first == wanted } }
             ?: return null
         return ResolvedStream(
             url = url,
             headers = mapOf("User-Agent" to YouTubeClient.USER_AGENT_WEB),
             expiresAtMs = System.currentTimeMillis() + 5 * 60_000L,
             client = "NewPipe",
+            info = StreamInfo(itag, StreamInfo.codecOf(null, itag), StreamInfo.KNOWN_KBPS[itag], null, "NewPipe"),
         )
     }
 
-    /** Best audio-only formats first: Opus, then AAC, highest bitrate within each. */
+    /** Opus 251, then AAC 140 (full quality for free accounts), then whatever else by codec and bitrate. */
     private fun audioCandidates(response: PlayerResponse): List<PlayerResponse.StreamingData.Format> =
         response.streamingData?.adaptiveFormats.orEmpty()
             .filter { it.isAudio && it.isOriginal }
             .sortedWith(
-                compareByDescending<PlayerResponse.StreamingData.Format> { it.mimeType.contains("opus") }
+                compareByDescending<PlayerResponse.StreamingData.Format> { FULL_QUALITY_RANK[it.itag] ?: 0 }
+                    .thenByDescending { it.mimeType.contains("opus") }
                     .thenByDescending { it.bitrate },
             )
 
@@ -159,6 +181,7 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
 
         // 251/250/249 = Opus, 140/139 = AAC
         val PREFERRED_AUDIO_ITAGS = listOf(251, 140, 250, 249, 139)
+        val FULL_QUALITY_RANK = mapOf(251 to 2, 140 to 1)
 
         fun YouTubeClient.streamHeaders(): Map<String, String> = buildMap {
             put("User-Agent", userAgent)

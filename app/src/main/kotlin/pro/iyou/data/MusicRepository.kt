@@ -36,6 +36,9 @@ data class CollectionPage(
 
 enum class SearchKind { Songs, Videos, Albums, Playlists }
 
+/** A radio queue; [currentIndex] is the song it was started from (possibly swapped for its audio version). */
+data class Radio(val tracks: List<Track>, val currentIndex: Int)
+
 data class SearchResults(val tracks: List<Track>, val collections: List<Collection>)
 
 class MusicRepository(private val songs: SongDao) {
@@ -101,9 +104,16 @@ class MusicRepository(private val songs: SongDao) {
         }
     }
 
-    /** YouTube Music's radio for a song: the song itself first, then what it would play next. */
-    suspend fun radio(videoId: String): List<Track> =
-        YouTube.next(WatchEndpoint(videoId = videoId)).getOrNull()?.items.orEmpty().map { it.toTrack() }
+    /**
+     * YouTube Music's radio for a song: the song itself, then what it would play next. Music videos
+     * that also exist as audio tracks come back as the audio track, which is usually the cleaner mix.
+     */
+    suspend fun radio(videoId: String): Radio {
+        val result = YouTube.next(WatchEndpoint(videoId = videoId), preferAudio = true).getOrNull()
+            ?: return Radio(emptyList(), 0)
+        val tracks = result.items.map { it.toTrack() }
+        return Radio(tracks, (result.currentIndex ?: tracks.indexOfFirst { it.id == videoId }).coerceIn(0, (tracks.size - 1).coerceAtLeast(0)))
+    }
 
     // ---- library (local only, no account) ----
 

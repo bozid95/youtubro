@@ -11,7 +11,7 @@ data class PlaylistPanelVideoRenderer(
     val badges: List<Badges>?,
     val videoId: String?,
     val playlistSetVideoId: String?,
-    val selected: Boolean,
+    val selected: Boolean = false,
     val thumbnail: Thumbnails,
     val unplayableText: Runs?,
     val menu: Menu?,

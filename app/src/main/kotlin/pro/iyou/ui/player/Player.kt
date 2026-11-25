@@ -41,7 +41,10 @@ import androidx.compose.material.icons.rounded.RepeatOne
 import androidx.compose.material.icons.rounded.Shuffle
 import androidx.compose.material.icons.rounded.SkipNext
 import androidx.compose.material.icons.rounded.SkipPrevious
+import androidx.compose.material.icons.rounded.WarningAmber
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +52,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -77,6 +82,7 @@ import androidx.media3.common.Player
 import kotlinx.coroutines.launch
 import pro.iyou.app
 import pro.iyou.data.model.formatDuration
+import pro.iyou.data.stream.StreamInfo
 import pro.iyou.playback.PlayerState
 import pro.iyou.ui.LocalPlayer
 import pro.iyou.ui.components.Artwork
@@ -262,9 +268,9 @@ fun FullPlayer(state: PlayerState, onCollapse: () -> Unit) {
                     }
                 },
             )
-            Row(Modifier.fillMaxWidth()) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(formatDuration(shownPosition / 1000), style = MaterialTheme.typography.labelMedium, color = Palette.Text.copy(alpha = 0.6f))
-                Spacer(Modifier.weight(1f))
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { StreamBadge(track.id) }
                 Text(formatDuration(state.durationMs / 1000), style = MaterialTheme.typography.labelMedium, color = Palette.Text.copy(alpha = 0.6f))
             }
 
@@ -402,3 +408,71 @@ fun Color.darken(amount: Float): Color = Color(
     blue = blue * (1 - amount),
     alpha = alpha,
 )
+
+/**
+ * Which audio is playing ("Opus · 160 kbps"); streams under 128 kbps are flagged, not skipped.
+ * Tapping it shows the details and the volume normalisation switch.
+ */
+@Composable
+private fun StreamBadge(videoId: String) {
+    val container = LocalContext.current.app.container
+    val all by container.streams.info.collectAsState()
+    val normalize by container.settings.normalize.collectAsState()
+    val info = all[videoId]
+    var open by remember { mutableStateOf(false) }
+
+    Box {
+        Row(
+            Modifier
+                .clip(CircleShape)
+                .background(if (info?.isLow == true) Palette.Accent.copy(alpha = 0.18f) else Palette.Text.copy(alpha = 0.08f))
+                .clickable { open = true }
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+        ) {
+            if (info?.isLow == true) {
+                Icon(Icons.Rounded.WarningAmber, null, tint = Palette.Accent, modifier = Modifier.size(12.dp))
+            }
+            Text(
+                when {
+                    info == null -> "…"
+                    info.isLow -> "${info.label} · rendah"
+                    else -> info.label
+                },
+                style = MaterialTheme.typography.labelSmall,
+                color = if (info?.isLow == true) Palette.Accent else Palette.Text.copy(alpha = 0.7f),
+                maxLines = 1,
+            )
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            if (info != null) {
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("Format  ${info.label}  (itag ${info.itag})", style = MaterialTheme.typography.bodySmall)
+                    Text("Sumber  ${info.client}", style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted)
+                    info.loudnessDb?.let {
+                        Text("Loudness  %+.1f dB".format(it), style = MaterialTheme.typography.bodySmall, color = Palette.TextMuted)
+                    }
+                    if (info.isLow) {
+                        Text(
+                            "Di bawah ${StreamInfo.LOW_KBPS} kbps: YouTube hanya memberi versi ini untuk lagu ini.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Palette.Accent,
+                        )
+                    }
+                }
+            }
+            DropdownMenuItem(
+                text = { Text("Normalisasi volume") },
+                trailingIcon = {
+                    Switch(
+                        checked = normalize,
+                        onCheckedChange = { container.settings.setNormalize(it) },
+                        colors = SwitchDefaults.colors(checkedTrackColor = Palette.Accent),
+                    )
+                },
+                onClick = { container.settings.setNormalize(!normalize) },
+            )
+        }
+    }
+}

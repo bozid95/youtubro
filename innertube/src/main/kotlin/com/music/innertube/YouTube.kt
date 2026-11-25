@@ -17,6 +17,7 @@ import com.music.innertube.models.PlaylistItem
 import com.music.innertube.models.SearchSuggestions
 import com.music.innertube.models.Run
 import com.music.innertube.models.SongItem
+import com.music.innertube.models.PlaylistPanelVideoRenderer
 import com.music.innertube.models.WatchEndpoint
 import com.music.innertube.models.WatchEndpoint.WatchEndpointMusicSupportedConfigs.WatchEndpointMusicConfig.Companion.MUSIC_VIDEO_TYPE_ATV
 import com.music.innertube.models.YouTubeClient
@@ -1285,7 +1286,11 @@ object YouTube {
     // the player hands out s.youtube.com links, the music site takes the same ones for its own plays
     private fun musicStatsUrl(url: String) = url.replace("https://s.youtube.com", "https://music.youtube.com")
 
-    suspend fun next(endpoint: WatchEndpoint, continuation: String? = null): Result<NextResult> = runCatching {
+    /**
+     * [preferAudio]: when a queue entry is a music video that also exists as an audio track, return the
+     * audio track (YouTube Music's "Song" side of the Song / Video toggle). Its mix is usually the album master.
+     */
+    suspend fun next(endpoint: WatchEndpoint, continuation: String? = null, preferAudio: Boolean = false): Result<NextResult> = runCatching {
         val response = innerTube.next(
             WEB_REMIX,
             endpoint.videoId,
@@ -1305,14 +1310,15 @@ object YouTube {
         val items = playlistPanelRenderer.contents.mapNotNull { content ->
             content.playlistPanelVideoRenderer
                 ?.let(NextPage::fromPlaylistPanelVideoRenderer)
-                ?.let { it to content.playlistPanelVideoRenderer.selected }
+                ?.let { return@mapNotNull it to content.playlistPanelVideoRenderer.selected }
+            content.playlistPanelVideoWrapperRenderer?.let { pickFromWrapper(it, preferAudio) }
         }
         val songs = items.map { it.first }
         val currentIndex = items.indexOfFirst { it.second }.takeIf { it != -1 }
 
         // some hindi songs have an empty automix preview, so fall back to the song and its related tab instead of failing the whole queue
         playlistPanelRenderer.contents.lastOrNull()?.automixPreviewVideoRenderer?.content?.automixPlaylistVideoRenderer?.navigationEndpoint?.watchPlaylistEndpoint?.let { watchPlaylistEndpoint ->
-            next(watchPlaylistEndpoint).getOrNull()?.takeIf { it.items.isNotEmpty() || songs.isEmpty() }?.let { result ->
+            next(watchPlaylistEndpoint, preferAudio = preferAudio).getOrNull()?.takeIf { it.items.isNotEmpty() || songs.isEmpty() }?.let { result ->
                 return@runCatching result.copy(
                     title = title,
                     // the automix usually opens with the song it was made from, which is already in songs
@@ -1333,6 +1339,26 @@ object YouTube {
             continuation = playlistPanelRenderer.continuations?.getContinuation(),
             endpoint = endpoint
         )
+    }
+
+    private val lenientJson = Json { ignoreUnknownKeys = true; explicitNulls = false; coerceInputValues = true }
+
+    /** Unwraps a Song / Video pair from the queue; the `selected` flag always comes from the primary entry. */
+    private fun pickFromWrapper(wrapper: kotlinx.serialization.json.JsonObject, preferAudio: Boolean): Pair<SongItem, Boolean>? {
+        fun decode(element: kotlinx.serialization.json.JsonElement?): PlaylistPanelVideoRenderer? = runCatching {
+            val renderer = (element as? kotlinx.serialization.json.JsonObject)?.get("playlistPanelVideoRenderer") ?: return null
+            lenientJson.decodeFromJsonElement(PlaylistPanelVideoRenderer.serializer(), renderer)
+        }.getOrNull()
+
+        val primary = decode(wrapper["primaryRenderer"]) ?: return null
+        val primarySong = NextPage.fromPlaylistPanelVideoRenderer(primary) ?: return null
+        if (!preferAudio || !primarySong.isVideoSong) return primarySong to primary.selected
+
+        val audio = (wrapper["counterpart"] as? kotlinx.serialization.json.JsonArray).orEmpty()
+            .mapNotNull { decode((it as? kotlinx.serialization.json.JsonObject)?.get("counterpartRenderer")) }
+            .mapNotNull(NextPage::fromPlaylistPanelVideoRenderer)
+            .firstOrNull { it.musicVideoType == MUSIC_VIDEO_TYPE_ATV }
+        return (audio ?: primarySong) to primary.selected
     }
 
     suspend fun lyrics(endpoint: BrowseEndpoint): Result<String?> = runCatching {
