@@ -59,7 +59,7 @@ private const val BLOG_URL = "https://widodo.my.id"
 
 /** Tentang: version, update check / install, links and credits. */
 @Composable
-fun AboutScreen(onBack: () -> Unit, contentPadding: PaddingValues) {
+fun AboutScreen(contentPadding: PaddingValues) {
     val context = LocalContext.current
     val updater = context.app.container.updater
     val update by updater.available.collectAsState()
@@ -73,10 +73,11 @@ fun AboutScreen(onBack: () -> Unit, contentPadding: PaddingValues) {
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = contentPadding) {
         item {
-            Row(Modifier.statusBarsPadding().padding(start = 4.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Kembali") }
-                Text("Tentang", style = MaterialTheme.typography.titleLarge)
-            }
+            Text(
+                "Tentang",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.statusBarsPadding().padding(start = 20.dp, end = 20.dp, top = 24.dp),
+            )
         }
 
         item {

@@ -28,6 +28,8 @@ import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +57,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import pro.iyou.DeepLink
+import pro.iyou.app
+import androidx.compose.ui.platform.LocalContext
 import pro.iyou.data.Collection
 import pro.iyou.playback.PlayerConnection
 import pro.iyou.ui.player.FullPlayer
@@ -91,6 +95,7 @@ private val tabs = listOf(
     Tab(HomeRoute, "Beranda", Icons.Outlined.Home, Icons.Rounded.Home),
     Tab(SearchRoute, "Cari", Icons.Outlined.Search, Icons.Rounded.Search),
     Tab(LibraryRoute, "Koleksi", Icons.Rounded.FavoriteBorder, Icons.Rounded.Favorite),
+    Tab(AboutRoute, "Tentang", Icons.Outlined.Info, Icons.Rounded.Info),
 )
 
 @Composable
@@ -141,9 +146,9 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
                     )
                 }
                 composable<LibraryRoute> {
-                    LibraryScreen(contentPadding = bottomSpace, onOpenAbout = { nav.navigate(AboutRoute) })
+                    LibraryScreen(contentPadding = bottomSpace)
                 }
-                composable<AboutRoute> { AboutScreen(onBack = { nav.popBackStack() }, contentPadding = bottomSpace) }
+                composable<AboutRoute> { AboutScreen(contentPadding = bottomSpace) }
                 composable<CollectionRoute> { entry ->
                     CollectionScreen(
                         target = entry.toRoute<CollectionRoute>().toCollection(),
@@ -180,13 +185,14 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
                     Modifier
                         .fillMaxWidth()
                         .height(64.dp)
-                        .padding(horizontal = 24.dp),
+                        .padding(horizontal = 8.dp),
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
+                    val updateReady by LocalContext.current.app.container.updater.available.collectAsState()
                     tabs.forEach { tab ->
                         val selected = destination?.hasRoute(tab.route::class) == true
-                        TabItem(tab, selected) {
+                        TabItem(tab, selected, badge = tab.route == AboutRoute && updateReady != null) {
                             nav.navigate(tab.route) {
                                 popUpTo(nav.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
@@ -214,7 +220,7 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
 }
 
 @Composable
-private fun TabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
+private fun TabItem(tab: Tab, selected: Boolean, badge: Boolean = false, onClick: () -> Unit) {
     Column(
         Modifier
             .clickable(
@@ -222,15 +228,18 @@ private fun TabItem(tab: Tab, selected: Boolean, onClick: () -> Unit) {
                 indication = null,
                 onClick = onClick,
             )
-            .padding(horizontal = 20.dp, vertical = 6.dp),
+            .padding(horizontal = 14.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Icon(
-            if (selected) tab.selectedIcon else tab.icon,
-            tab.label,
-            tint = if (selected) Palette.Text else Palette.TextFaint,
-            modifier = Modifier.size(24.dp),
-        )
+        // a dot on Tentang when a new version is out
+        androidx.compose.material3.BadgedBox(badge = { if (badge) androidx.compose.material3.Badge(containerColor = Palette.Accent) }) {
+            Icon(
+                if (selected) tab.selectedIcon else tab.icon,
+                tab.label,
+                tint = if (selected) Palette.Text else Palette.TextFaint,
+                modifier = Modifier.size(24.dp),
+            )
+        }
         Spacer(Modifier.height(4.dp))
         Text(
             tab.label,

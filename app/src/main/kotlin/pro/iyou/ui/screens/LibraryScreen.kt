@@ -17,9 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Shuffle
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,8 +45,7 @@ import pro.iyou.ui.components.TrackRow
 import pro.iyou.ui.theme.Palette
 
 @Composable
-fun LibraryScreen(contentPadding: PaddingValues, onOpenAbout: () -> Unit = {}) {
-    val updateAvailable by LocalContext.current.app.container.updater.available.collectAsState()
+fun LibraryScreen(contentPadding: PaddingValues) {
     val repo = LocalContext.current.app.container.repository
     val player = LocalPlayer.current
     val scope = rememberCoroutineScope()
@@ -65,11 +61,6 @@ fun LibraryScreen(contentPadding: PaddingValues, onOpenAbout: () -> Unit = {}) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text("Koleksi", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-                IconButton(onClick = onOpenAbout) {
-                    BadgedBox(badge = { if (updateAvailable != null) Badge(containerColor = Palette.Accent) }) {
-                        Icon(Icons.Outlined.Info, "Tentang", tint = Palette.Text)
-                    }
-                }
             }
             Row(
                 Modifier.padding(horizontal = 20.dp),
