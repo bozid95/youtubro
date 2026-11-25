@@ -36,7 +36,6 @@ class MainActivity : ComponentActivity() {
 
         player = PlayerConnection(this, lifecycleScope, app.container.repository, app.container.settings)
         if (savedInstanceState == null) links.value = DeepLink.from(intent)
-        lifecycleScope.launch { app.container.updater.check() }
 
         // Android 13+ asks before showing the media notification
         if (Build.VERSION.SDK_INT >= 33 &&
@@ -61,6 +60,8 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         player.setForeground(true)
+        // every time the app comes to the front, so a new release shows up without a restart
+        lifecycleScope.launch { app.container.updater.check() }
     }
 
     override fun onStop() {

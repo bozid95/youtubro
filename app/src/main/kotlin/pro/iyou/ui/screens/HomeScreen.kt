@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -80,11 +81,16 @@ fun HomeScreen(onOpen: (Collection) -> Unit, contentPadding: PaddingValues) {
     val vm = viewModel { HomeViewModel(repo) }
     val state by vm.state.collectAsState()
     val refreshing by vm.refreshing.collectAsState()
+    val updater = LocalContext.current.app.container.updater
+    val updateScope = rememberCoroutineScope()
     val player = LocalPlayer.current
 
     PullToRefreshBox(
         isRefreshing = refreshing,
-        onRefresh = { vm.load(pull = true) },
+        onRefresh = {
+            vm.load(pull = true)
+            updateScope.launch { updater.check(force = true) }
+        },
         modifier = Modifier.fillMaxSize(),
     ) {
         LazyColumn(Modifier.fillMaxSize(), contentPadding = contentPadding) {

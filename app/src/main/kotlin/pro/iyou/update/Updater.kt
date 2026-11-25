@@ -42,7 +42,7 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
         data class Failed(val message: String) : Phase
     }
 
-    private val prefs = context.getSharedPreferences("update", Context.MODE_PRIVATE)
+    @Volatile private var lastCheck = 0L
     private val _available = MutableStateFlow<AppUpdate?>(null)
     val available: StateFlow<AppUpdate?> = _available.asStateFlow()
     private val _phase = MutableStateFlow<Phase>(Phase.Idle)
@@ -50,11 +50,13 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
 
     val currentVersion: String = BuildConfig.VERSION_NAME
 
-    /** [force] = the user asked; otherwise at most every few hours, quietly. */
+    /** [force] = the user asked (or pulled to refresh); otherwise quietly, at most every 10 minutes. */
     suspend fun check(force: Boolean = false) = withContext(Dispatchers.IO) {
         if (_phase.value is Phase.Downloading || _phase.value is Phase.Installing) return@withContext
         val now = System.currentTimeMillis()
-        if (!force && now - prefs.getLong(KEY_LAST_CHECK, 0) < CHECK_EVERY_MS) return@withContext
+        // quiet checks (app opened / back in front) only skip if one ran moments ago
+        if (!force && now - lastCheck < MIN_GAP_MS) return@withContext
+        lastCheck = now
         if (force) _phase.value = Phase.Checking
         runCatching {
             val request = Request.Builder().url(LATEST_RELEASE)
@@ -77,7 +79,6 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
                 sizeBytes = asset["size"]?.jsonPrimitive?.longOrNull ?: 0L,
             )
         }.onSuccess { update ->
-            prefs.edit().putLong(KEY_LAST_CHECK, now).apply()
             val newer = isNewer(update.version, currentVersion)
             _available.value = update.takeIf { newer }
             _phase.value = if (newer || !force) Phase.Idle else Phase.UpToDate
@@ -166,8 +167,7 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
 
     companion object {
         private const val LATEST_RELEASE = "https://api.github.com/repos/bozid95/youtubro/releases/latest"
-        private const val KEY_LAST_CHECK = "last_check"
-        private const val CHECK_EVERY_MS = 6 * 60 * 60 * 1000L
+        private const val MIN_GAP_MS = 10 * 60 * 1000L
 
         /** "1.10.0" > "1.9.2"; anything after a '-' (like "0.0.42-dev") is ignored. */
         fun isNewer(candidate: String, current: String): Boolean {
