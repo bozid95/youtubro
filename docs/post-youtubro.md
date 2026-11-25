@@ -66,7 +66,7 @@ Unduhan berjalan dengan progress bar, lalu Android menampilkan konfirmasi **Upda
 
 ## Tips Pemakaian
 
-- **Tekan lama** atau ketuk **⋮** pada sebuah lagu untuk *Putar berikutnya*, *Tambah ke antrean*, *Mulai radio* atau *Suka*.
+- Ketuk **⋮** pada sebuah lagu untuk *Putar berikutnya*, *Tambah ke antrean*, *Mulai radio* atau *Suka*.
 - **Geser ke atas** mini player untuk membuka pemutar layar penuh. Tekan **Back** untuk mengecilkannya lagi.
 - Ketuk **Lagu | Video** di bagian atas pemutar untuk pindah mode. Saat layar mati, mode Video otomatis hanya memutar suaranya.
 - Ketuk label format (misalnya *Opus · 160 kbps*) untuk melihat detail kualitas dan menyalakan atau mematikan **Normalisasi volume**.
