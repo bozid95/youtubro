@@ -60,5 +60,11 @@ private val typography = Typography(
 
 @Composable
 fun IyouTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = colors, typography = typography, content = content)
+    MaterialTheme(colorScheme = colors, typography = typography) {
+        // screens draw straight on the window, not inside a Surface, so set the text colour here
+        androidx.compose.runtime.CompositionLocalProvider(
+            androidx.compose.material3.LocalContentColor provides Palette.Text,
+            content = content,
+        )
+    }
 }
