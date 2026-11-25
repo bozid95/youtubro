@@ -155,7 +155,8 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
                     .background(
                         Brush.verticalGradient(
                             0f to Palette.Background.copy(alpha = 0f),
-                            0.35f to Palette.Background.copy(alpha = 0.92f),
+                            0.25f to Palette.Background.copy(alpha = 0.9f),
+                            0.5f to Palette.Background,
                             1f to Palette.Background,
                         ),
                     )
