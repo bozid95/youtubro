@@ -5,7 +5,7 @@ description: "Aplikasi Android buatan sendiri untuk mendengarkan musik dan menon
 tags: [android, kotlin, open-source, musik]
 ---
 
-# Youtubro: Musik YouTube Tanpa Iklan, Tetap Jalan Saat Layar Mati
+# Youtubro: Musik & Video YouTube Tanpa Iklan, Tetap Jalan Saat Layar Mati
 
 Pernah kesal karena lagu di YouTube berhenti begitu layar HP dimatikan? Atau karena iklan muncul di tengah lagu? Saya juga, jadi saya membuat aplikasi sendiri: **Youtubro**.
 
@@ -34,13 +34,14 @@ Youtubro adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Mus
 - **Normalisasi volume.** Lagu yang terlalu keras atau terlalu pelan disamakan volumenya. Fitur ini bisa dimatikan.
 - **Versi lagu otomatis.** Kalau sebuah video klip punya versi audio resminya, yang diputar adalah versi audio itu, karena biasanya suaranya lebih jernih.
 - **Hemat kuota.** Lagu yang pernah diputar disimpan di cache, jadi tidak perlu diunduh ulang.
-- **Update dari dalam aplikasi.** Kalau ada versi baru, kartu *Versi baru tersedia* muncul di Beranda. Ketuk **Download & update**, dan versi baru terpasang di atas yang lama. Lagu favorit dan riwayat tetap aman.
+- **Update dari dalam aplikasi.** Kalau ada versi baru, kartu *Versi baru tersedia* muncul di Beranda dan tab **Tentang** diberi titik oranye. Ketuk **Update**, dan versi baru terpasang di atas yang lama. Lagu favorit dan riwayat tetap aman.
+- **Halaman Tentang.** Tab ini menampilkan versi yang terpasang, catatan rilis, tombol update, dan link ke kode sumber.
 
 ## Download
 
 **[⬇️ Download Youtubro versi terbaru (APK)](https://github.com/bozid95/youtubro/releases/latest)**
 
-Di halaman tersebut, pilih file **`youtubro-release.apk`**.
+Di halaman tersebut, pilih file **`youtubro-release.apk`**. Versi terbaru saat tulisan ini dibuat adalah **1.0.2**.
 
 Syarat: HP Android **8.0 (Oreo) atau lebih baru**.
 
@@ -56,7 +57,12 @@ Syarat: HP Android **8.0 (Oreo) atau lebih baru**.
 
 ### Cara Update
 
-Tidak perlu uninstall. Buka Youtubro, lalu ketuk **Download & update** di kartu yang muncul di Beranda. Anda juga bisa ke **Koleksi**, gulir ke bawah, lalu ketuk **Periksa update**. Pertama kali, Android akan meminta izin *Instal aplikasi tidak dikenal* untuk Youtubro. Aktifkan izin itu, lalu kembali dan ketuk tombolnya sekali lagi.
+Tidak perlu uninstall. Ada dua cara:
+
+1. Ketuk **Update** di kartu *Versi baru tersedia* yang muncul di **Beranda**, atau
+2. Buka tab **Tentang**. Versi baru diperiksa otomatis saat tab dibuka, atau ketuk ↻ untuk memeriksa ulang. Lalu ketuk **Update ke x.y.z**.
+
+Unduhan berjalan dengan progress bar, lalu Android menampilkan konfirmasi **Update**. Pertama kali, Android akan meminta izin *Instal aplikasi tidak dikenal* untuk Youtubro. Aktifkan izin itu, lalu kembali dan ketuk **Update** sekali lagi. Lagu favorit dan riwayat Anda tetap aman.
 
 ## Tips Pemakaian
 
@@ -64,7 +70,7 @@ Tidak perlu uninstall. Buka Youtubro, lalu ketuk **Download & update** di kartu 
 - **Geser ke atas** mini player untuk membuka pemutar layar penuh. Tekan **Back** untuk mengecilkannya lagi.
 - Ketuk **Lagu | Video** di bagian atas pemutar untuk pindah mode. Saat layar mati, mode Video otomatis hanya memutar suaranya.
 - Ketuk label format (misalnya *Opus · 160 kbps*) untuk melihat detail kualitas dan menyalakan atau mematikan **Normalisasi volume**.
-- Di aplikasi YouTube, ketuk **Bagikan → Youtubro**, dan video tersebut langsung diputar sebagai musik.
+- Di aplikasi YouTube, ketuk **Bagikan → Youtubro**, dan video tersebut langsung diputar.
 - Jika beranda gagal dimuat, **tarik layar ke bawah** untuk memuat ulang. Jika masih gagal, coba matikan VPN, Private DNS atau ad blocker sebentar.
 
 ## Open Source
