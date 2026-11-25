@@ -1,0 +1,78 @@
+# Versions follow Mochy Music (realidkroo/Mochy-Music) so the copied innertube module builds as it does there.
+[versions]
+androidGradlePlugin = "9.0.0"
+kotlin = "2.3.10"
+ksp = "2.3.5"
+compose = "1.10.2"
+material3 = "1.5.0-alpha18"
+lifecycle = "2.10.0"
+activity = "1.12.3"
+navigation = "2.9.6"
+media3 = "1.7.1"
+room = "2.8.4"
+ktor = "3.6.0"
+coil = "3.3.0"
+palette = "1.0.0"
+datastore = "1.2.0"
+coroutines = "1.10.2"
+serialization = "1.9.0"
+brotli = "0.1.2"
+desugaring = "2.1.5"
+newpipeextractor = "v0.25.2"
+innertubex = "v0.11.6"
+junit = "4.13.2"
+timber = "5.0.1"
+coreKtx = "1.17.0"
+
+[libraries]
+gradle = { module = "com.android.tools.build:gradle", version.ref = "androidGradlePlugin" }
+
+core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
+activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
+navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version.ref = "lifecycle" }
+
+compose-ui = { module = "androidx.compose.ui:ui", version.ref = "compose" }
+compose-foundation = { module = "androidx.compose.foundation:foundation", version.ref = "compose" }
+compose-animation = { module = "androidx.compose.animation:animation", version.ref = "compose" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose" }
+compose-icons-extended = { module = "androidx.compose.material:material-icons-extended", version = "1.7.8" }
+material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+
+media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
+media3-session = { module = "androidx.media3:media3-session", version.ref = "media3" }
+media3-okhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3" }
+
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+palette = { module = "androidx.palette:palette-ktx", version.ref = "palette" }
+datastore = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "coroutines" }
+serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-client-encoding = { module = "io.ktor:ktor-client-encoding", version.ref = "ktor" }
+ktor-serialization-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+brotli = { module = "org.brotli:dec", version.ref = "brotli" }
+
+newpipeextractor = { module = "com.github.TeamNewPipe:NewPipeExtractor", version.ref = "newpipeextractor" }
+innertubex = { module = "com.github.MetrolistGroup.innertubex:innertubex", version.ref = "innertubex" }
+
+desugaring = { module = "com.android.tools:desugar_jdk_libs_nio", version.ref = "desugaring" }
+junit = { module = "junit:junit", version.ref = "junit" }
+timber = { module = "com.jakewharton.timber:timber", version.ref = "timber" }
+
+[plugins]
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
