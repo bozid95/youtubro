@@ -3,7 +3,7 @@ package pro.iyou
 import android.content.Intent
 import android.net.Uri
 
-/** Links iYou can open: YouTube / YouTube Music watch links, shared text, and `iyou://` links. */
+/** Links Youtubro can open: YouTube / YouTube Music watch links, shared text, and `iyou://` links. */
 sealed interface DeepLink {
     data class Play(val videoId: String) : DeepLink
     data class Search(val query: String) : DeepLink

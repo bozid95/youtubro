@@ -59,12 +59,12 @@ jobs:
       - name: Rename APKs
         run: |
           mkdir -p out
-          cp app/build/outputs/apk/debug/*.apk out/iyou-debug.apk
-          cp app/build/outputs/apk/release/*.apk out/iyou-release.apk
+          cp app/build/outputs/apk/debug/*.apk out/youtubro-debug.apk
+          cp app/build/outputs/apk/release/*.apk out/youtubro-release.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: iyou-apk
+          name: youtubro-apk
           path: out/*.apk
           if-no-files-found: error
 

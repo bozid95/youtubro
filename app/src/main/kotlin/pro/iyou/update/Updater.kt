@@ -158,7 +158,7 @@ class Updater(private val context: Context, private val http: OkHttpClient) {
             PackageInstaller.STATUS_SUCCESS -> Phase.Idle
             PackageInstaller.STATUS_FAILURE_ABORTED -> Phase.Idle
             PackageInstaller.STATUS_FAILURE_CONFLICT, PackageInstaller.STATUS_FAILURE_INCOMPATIBLE ->
-                Phase.Failed("Tanda tangan APK berbeda dengan yang terpasang. Uninstall iYou sekali, lalu pasang versi baru.")
+                Phase.Failed("Tanda tangan APK berbeda dengan yang terpasang. Uninstall Youtubro sekali, lalu pasang versi baru.")
             else -> Phase.Failed("Pemasangan gagal: ${message ?: status}")
         }
     }

@@ -116,7 +116,7 @@ fun VersionFooter(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text("iYou ${updater.currentVersion}", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
+        Text("Youtubro ${updater.currentVersion}", style = MaterialTheme.typography.bodySmall, color = Palette.TextFaint)
         val status = when (val p = phase) {
             Updater.Phase.Checking -> "Memeriksa…"
             Updater.Phase.UpToDate -> "Sudah versi terbaru"

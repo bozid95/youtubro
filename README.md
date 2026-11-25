@@ -1,4 +1,4 @@
-# iYou
+# Youtubro
 
 Pemutar musik YouTube Music untuk Android yang minimalis: **tanpa iklan**, **tetap jalan di latar belakang** (layar mati / aplikasi diminimalkan), dan tanpa akun.
 
@@ -20,7 +20,7 @@ Pemutar musik YouTube Music untuk Android yang minimalis: **tanpa iklan**, **tet
 - **Koleksi**: lagu disukai dan riwayat putar, tersimpan lokal di HP
 - **Background playback** + kontrol di notifikasi dan lock screen (Media3 `MediaSessionService`)
 - Cache audio 512 MB, jadi lagu yang sudah diputar tidak diunduh ulang
-- **Buka link YouTube**: link `music.youtube.com` / `youtube.com` / `youtu.be`, atau *Share → iYou* dari aplikasi YouTube, langsung diputar
+- **Buka link YouTube**: link `music.youtube.com` / `youtube.com` / `youtu.be`, atau *Share → Youtubro* dari aplikasi YouTube, langsung diputar
 
 ## Arsitektur
 
@@ -38,7 +38,7 @@ Stack: Kotlin, Jetpack Compose + Material 3, Media3 ExoPlayer, Ktor, Room, Coil 
 
 ## Build
 
-**Lewat GitHub Actions:** setiap push ke `main`, workflow [Build APK](.github/workflows/build.yml) membangun APK debug dan release. Unduh dari tab **Actions → run terbaru → Artifacts → `iyou-apk`**. Kalau push tag `v*` (misalnya `v0.1.0`), APK juga dilampirkan ke GitHub Release.
+**Lewat GitHub Actions:** setiap push ke `main`, workflow [Build APK](.github/workflows/build.yml) membangun APK debug dan release. Unduh dari tab **Actions → run terbaru → Artifacts → `youtubro-apk`**. Kalau push tag `v*` (misalnya `v0.1.0`), APK juga dilampirkan ke GitHub Release.
 
 Supaya APK release bisa di-update tanpa uninstall, tambahkan secrets berikut di repo (Settings → Secrets → Actions):
 `KEYSTORE_BASE64` (`base64 -w0 kunci.jks`), `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`, `SIGNING_KEY_PASSWORD`.
