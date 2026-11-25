@@ -34,7 +34,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -52,6 +54,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import pro.iyou.DeepLink
 import pro.iyou.data.Collection
 import pro.iyou.playback.PlayerConnection
 import pro.iyou.ui.player.FullPlayer
@@ -88,7 +91,7 @@ private val tabs = listOf(
 )
 
 @Composable
-fun IyouRoot(player: PlayerConnection) {
+fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: () -> Unit = {}) {
     val nav = rememberNavController()
     val state by player.state.collectAsState()
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -100,13 +103,41 @@ fun IyouRoot(player: PlayerConnection) {
     val bottomSpace = PaddingValues(bottom = if (hasTrack) 160.dp else 92.dp)
     val open: (Collection) -> Unit = { nav.navigate(it.route()) }
 
+    var searchRequest by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(link) {
+        when (link) {
+            is DeepLink.Play -> {
+                player.playVideoId(link.videoId)
+                expanded = true
+            }
+            is DeepLink.Search -> {
+                expanded = false
+                searchRequest = link.query
+                nav.navigate(SearchRoute) {
+                    popUpTo(nav.graph.findStartDestination().id) { saveState = true }
+                    launchSingleTop = true
+                }
+            }
+            null -> return@LaunchedEffect
+        }
+        onLinkHandled()
+    }
+
     BackHandler(enabled = expanded) { expanded = false }
 
     androidx.compose.runtime.CompositionLocalProvider(LocalPlayer provides player) {
         Box(Modifier.fillMaxSize().background(Palette.Background)) {
             NavHost(nav, startDestination = HomeRoute, modifier = Modifier.fillMaxSize()) {
                 composable<HomeRoute> { HomeScreen(onOpen = open, contentPadding = bottomSpace) }
-                composable<SearchRoute> { SearchScreen(onOpen = open, contentPadding = bottomSpace) }
+                composable<SearchRoute> {
+                    SearchScreen(
+                        onOpen = open,
+                        contentPadding = bottomSpace,
+                        request = searchRequest,
+                        onRequestHandled = { searchRequest = null },
+                    )
+                }
                 composable<LibraryRoute> { LibraryScreen(contentPadding = bottomSpace) }
                 composable<CollectionRoute> { entry ->
                     CollectionScreen(

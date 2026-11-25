@@ -49,6 +49,7 @@ class PlayerConnection(
     private var controller: MediaController? = null
     private var ticker: Job? = null
     private var radioJob: Job? = null
+    private val connected = kotlinx.coroutines.CompletableDeferred<Unit>()
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) = sync()
@@ -62,9 +63,20 @@ class PlayerConnection(
                     controller = it
                     it.addListener(listener)
                     sync()
+                    connected.complete(Unit)
                 }
                 .onFailure { Timber.e(it, "MediaController") }
         }
+    }
+
+
+    /** Open a song from a link: look it up, then play it with its radio queued behind. */
+    suspend fun playVideoId(videoId: String) {
+        connected.await()
+        val queue = repository.radio(videoId)
+        if (queue.isEmpty()) return
+        val index = queue.indexOfFirst { it.id == videoId }.coerceAtLeast(0)
+        play(queue, index)
     }
 
     /** Play a list as the queue, starting at [index]. */

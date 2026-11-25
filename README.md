@@ -2,6 +2,14 @@
 
 Pemutar musik YouTube Music untuk Android yang minimalis: **tanpa iklan**, **tetap jalan di latar belakang** (layar mati / aplikasi diminimalkan), dan tanpa akun.
 
+## Screenshot
+
+| Beranda | Cari | Pemutar | Mini player |
+|:-:|:-:|:-:|:-:|
+| <img src="docs/screenshots/home.png" width="200"> | <img src="docs/screenshots/search.png" width="200"> | <img src="docs/screenshots/player.png" width="200"> | <img src="docs/screenshots/miniplayer.png" width="200"> |
+
+<sub>Diambil otomatis di emulator oleh workflow [Screenshots](.github/workflows/screenshots.yml) (Actions → Screenshots → Run workflow).</sub>
+
 ## Fitur
 
 - **Beranda**: rekomendasi YouTube Music (Quick picks, album, playlist), tarik untuk refresh
@@ -12,6 +20,7 @@ Pemutar musik YouTube Music untuk Android yang minimalis: **tanpa iklan**, **tet
 - **Koleksi**: lagu disukai dan riwayat putar, tersimpan lokal di HP
 - **Background playback** + kontrol di notifikasi dan lock screen (Media3 `MediaSessionService`)
 - Cache audio 512 MB, jadi lagu yang sudah diputar tidak diunduh ulang
+- **Buka link YouTube**: link `music.youtube.com` / `youtube.com` / `youtu.be`, atau *Share → iYou* dari aplikasi YouTube, langsung diputar
 
 ## Arsitektur
 

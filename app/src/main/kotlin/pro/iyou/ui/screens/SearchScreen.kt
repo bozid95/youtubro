@@ -136,7 +136,12 @@ class SearchViewModel(
 }
 
 @Composable
-fun SearchScreen(onOpen: (Collection) -> Unit, contentPadding: PaddingValues) {
+fun SearchScreen(
+    onOpen: (Collection) -> Unit,
+    contentPadding: PaddingValues,
+    request: String? = null,
+    onRequestHandled: () -> Unit = {},
+) {
     val context = LocalContext.current
     val vm = viewModel {
         SearchViewModel(
@@ -153,7 +158,15 @@ fun SearchScreen(onOpen: (Collection) -> Unit, contentPadding: PaddingValues) {
     val focus = LocalFocusManager.current
     val focusRequester = remember { FocusRequester() }
 
-    LaunchedEffect(Unit) { if (results == null) focusRequester.requestFocus() }
+    LaunchedEffect(request) {
+        if (request != null) {
+            vm.submit(request)
+            focus.clearFocus()
+            onRequestHandled()
+        } else if (results == null) {
+            focusRequester.requestFocus()
+        }
+    }
 
     Column(Modifier.fillMaxSize()) {
         Text(
