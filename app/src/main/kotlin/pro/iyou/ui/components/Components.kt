@@ -219,7 +219,6 @@ fun Tile(
     Column(
         modifier = Modifier
             .width(width)
-            .clip(RoundedCornerShape(14.dp))
             .clickable(onClick = onClick),
     ) {
         Artwork(thumbnail, Modifier.fillMaxWidth().aspectRatio(1f), shape, px = 400)

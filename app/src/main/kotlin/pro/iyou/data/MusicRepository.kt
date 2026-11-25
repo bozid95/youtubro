@@ -40,8 +40,18 @@ data class SearchResults(val tracks: List<Track>, val collections: List<Collecti
 
 class MusicRepository(private val songs: SongDao) {
 
-    suspend fun home(): Result<List<Shelf>> = YouTube.home().map { page ->
-        page.sections.mapNotNull { section ->
+    /** The first page of YouTube Music's home is often just one shelf; follow a few continuations. */
+    suspend fun home(): Result<List<Shelf>> = YouTube.home().map { first ->
+        val sections = first.sections.toMutableList()
+        var next = first.continuation
+        var pages = 0
+        while (next != null && pages < 4 && sections.size < 10) {
+            val page = YouTube.home(continuation = next).getOrNull() ?: break
+            sections += page.sections
+            next = page.continuation
+            pages++
+        }
+        sections.mapNotNull { section ->
             val tracks = section.items.filterIsInstance<SongItem>().map { it.toTrack() }
             val collections = section.items.mapNotNull { it.toCollection() }
             if (tracks.isEmpty() && collections.isEmpty()) null

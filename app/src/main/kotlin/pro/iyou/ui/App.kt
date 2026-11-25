@@ -124,7 +124,6 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
         onLinkHandled()
     }
 
-    BackHandler(enabled = expanded) { expanded = false }
 
     androidx.compose.runtime.CompositionLocalProvider(LocalPlayer provides player) {
         Box(Modifier.fillMaxSize().background(Palette.Background)) {
@@ -196,6 +195,8 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
                 enter = slideInVertically(tween(360)) { it } + fadeIn(tween(200)),
                 exit = slideOutVertically(tween(300)) { it } + fadeOut(tween(250)),
             ) {
+                // declared after NavHost so it wins over the nav back stack
+                BackHandler { expanded = false }
                 FullPlayer(state, onCollapse = { expanded = false })
             }
         }
