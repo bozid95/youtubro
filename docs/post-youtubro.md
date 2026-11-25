@@ -11,12 +11,9 @@ Pernah kesal karena lagu di YouTube berhenti begitu layar HP dimatikan? Atau kar
 
 Youtubro adalah aplikasi Android kecil untuk mendengarkan musik dari YouTube Music, dan kalau mau, sekalian menonton videonya. Aplikasi ini **tanpa iklan**, **tetap memutar di latar belakang** dan **tampilannya sederhana**. Fiturnya sengaja dibuat sedikit: hanya yang benar-benar dipakai sehari-hari.
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/home.png" width="23%" alt="Beranda" />
-  <img src="https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/search.png" width="23%" alt="Pencarian" />
-  <img src="https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/player.png" width="23%" alt="Pemutar" />
-  <img src="https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/miniplayer.png" width="23%" alt="Mini player" />
-</p>
+| Beranda | Pencarian | Pemutar | Mini player |
+|:---:|:---:|:---:|:---:|
+| ![Beranda](https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/home.png) | ![Pencarian](https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/search.png) | ![Pemutar](https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/player.png) | ![Mini player](https://raw.githubusercontent.com/bozid95/youtubro/main/docs/screenshots/miniplayer.png) |
 
 ## Fitur
 
