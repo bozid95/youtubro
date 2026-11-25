@@ -58,6 +58,7 @@ import pro.iyou.DeepLink
 import pro.iyou.data.Collection
 import pro.iyou.playback.PlayerConnection
 import pro.iyou.ui.player.FullPlayer
+import pro.iyou.ui.player.VideoFullscreenHost
 import pro.iyou.ui.player.MiniPlayer
 import pro.iyou.ui.screens.CollectionScreen
 import pro.iyou.ui.screens.HomeScreen
@@ -200,6 +201,9 @@ fun IyouRoot(player: PlayerConnection, link: DeepLink? = null, onLinkHandled: ()
                 BackHandler { expanded = false }
                 FullPlayer(state, onCollapse = { expanded = false })
             }
+
+            // last, so it sits over everything and its back handler wins
+            VideoFullscreenHost(state, playerVisible = expanded && hasTrack)
         }
     }
 }

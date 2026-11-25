@@ -20,6 +20,7 @@ import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import pro.iyou.data.MusicRepository
+import pro.iyou.data.Settings
 import pro.iyou.data.model.Track
 import timber.log.Timber
 
@@ -35,6 +36,8 @@ data class PlayerState(
     val shuffle: Boolean = false,
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
     val hasNext: Boolean = false,
+    /** width / height of the playing video, null when there is no picture (audio only) */
+    val videoAspect: Float? = null,
 )
 
 /** The UI's handle on [PlaybackService], through a Media3 [MediaController]. */
@@ -42,6 +45,7 @@ class PlayerConnection(
     context: Context,
     private val scope: CoroutineScope,
     private val repository: MusicRepository,
+    private val settings: Settings,
 ) {
     private val _state = MutableStateFlow(PlayerState())
     val state: StateFlow<PlayerState> = _state.asStateFlow()
@@ -62,6 +66,7 @@ class PlayerConnection(
                 .onSuccess {
                     controller = it
                     it.addListener(listener)
+                    applyForeground()
                     sync()
                     connected.complete(Unit)
                 }
@@ -70,10 +75,28 @@ class PlayerConnection(
     }
 
 
+    /** The controller as a plain [Player], for drawing video. Null until connected. */
+    val media: Player? get() = controller
+
+    private var foreground = true
+
+    /** In the background there is nobody to watch: stop decoding (and fetching) the picture. */
+    fun setForeground(visible: Boolean) {
+        foreground = visible
+        applyForeground()
+    }
+
+    private fun applyForeground() {
+        val c = controller ?: return
+        c.trackSelectionParameters = c.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, !foreground)
+            .build()
+    }
+
     /** Open a song from a link: look it up, then play it with its radio queued behind. */
     suspend fun playVideoId(videoId: String) {
         connected.await()
-        val radio = repository.radio(videoId)
+        val radio = repository.radio(videoId, preferAudio = !settings.videoMode.value)
         if (radio.tracks.isEmpty()) return
         play(radio.tracks, radio.currentIndex)
     }
@@ -94,7 +117,7 @@ class PlayerConnection(
     /** Play one song now and fill the queue with YouTube Music's radio for it. */
     fun playRadio(track: Track) {
         radioJob?.cancel()
-        if (track.isVideo) {
+        if (track.isVideo && !settings.videoMode.value) {
             // a music video: fetch the radio first, it swaps in the song version when there is one
             radioJob = scope.launch {
                 val radio = repository.radio(track.id)
@@ -104,7 +127,7 @@ class PlayerConnection(
         }
         start(listOf(track), 0)
         radioJob = scope.launch {
-            val related = repository.radio(track.id).tracks.filter { it.id != track.id }
+            val related = repository.radio(track.id, preferAudio = !settings.videoMode.value).tracks.filter { it.id != track.id }
             val c = controller ?: return@launch
             if (c.currentMediaItem?.mediaId == track.id && related.isNotEmpty()) {
                 c.addMediaItems(related.map { it.toMediaItem() })
@@ -181,6 +204,8 @@ class PlayerConnection(
             shuffle = c.shuffleModeEnabled,
             repeatMode = c.repeatMode,
             hasNext = c.hasNextMediaItem(),
+            videoAspect = c.videoSize.takeIf { it.width > 0 && it.height > 0 }
+                ?.let { it.width * it.pixelWidthHeightRatio / it.height },
         )
         if (c.isPlaying) startTicker() else stopTicker()
     }

@@ -12,6 +12,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.HttpDataSource
@@ -21,7 +22,12 @@ import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
 import androidx.media3.datasource.okhttp.OkHttpDataSource
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.exoplayer.drm.DrmSessionManagerProvider
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.exoplayer.source.MediaSource
+import androidx.media3.exoplayer.source.MergingMediaSource
+import androidx.media3.exoplayer.source.ProgressiveMediaSource
+import androidx.media3.exoplayer.upstream.LoadErrorHandlingPolicy
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -30,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import pro.iyou.MainActivity
@@ -68,7 +75,7 @@ class PlaybackService : MediaSessionService() {
         )
 
         player = ExoPlayer.Builder(this)
-            .setMediaSourceFactory(DefaultMediaSourceFactory(dataSourceFactory()))
+            .setMediaSourceFactory(SongSourceFactory(DefaultMediaSourceFactory(dataSourceFactory()), videoDataSourceFactory()))
             .setAudioAttributes(
                 AudioAttributes.Builder()
                     .setUsage(C.USAGE_MEDIA)
@@ -95,6 +102,12 @@ class PlaybackService : MediaSessionService() {
             override fun onPlayerError(error: PlaybackException) {
                 val id = player.currentMediaItem?.mediaId ?: return
                 Timber.w(error, "Playback error on $id")
+                if (container.settings.videoMode.value && container.streams.hasVideo(id)) {
+                    // most likely the video half; carry on with the song as audio only
+                    container.streams.markVideoFailed(id)
+                    rebuildQueue(playWhenReady = true)
+                    return
+                }
                 if (retried.add(id)) {
                     // stream links expire or get refused; fetch a fresh one and pick up where we were
                     container.streams.invalidate(id)
@@ -111,6 +124,10 @@ class PlaybackService : MediaSessionService() {
         })
 
         attachEnhancer(player.audioSessionId)
+        // switching Song / Video rebuilds the queue so each item gets the right kind of source
+        scope.launch {
+            container.settings.videoMode.drop(1).collect { rebuildQueue(player.playWhenReady) }
+        }
         // the loudness of a song is known once its stream is resolved, which can be after it started
         scope.launch {
             combine(container.streams.info, container.settings.normalize) { _, _ -> }.collect { applyLoudness() }
@@ -164,6 +181,68 @@ class PlaybackService : MediaSessionService() {
         }
     }
 
+    private fun rebuildQueue(playWhenReady: Boolean) {
+        if (player.mediaItemCount == 0) return
+        val items = List(player.mediaItemCount) { player.getMediaItemAt(it) }
+        val index = player.currentMediaItemIndex
+        val position = player.currentPosition
+        player.setMediaItems(items, index, position)
+        player.prepare()
+        player.playWhenReady = playWhenReady
+    }
+
+    /**
+     * Audio as before; in video mode the song's video-only stream is merged in next to it.
+     * Video bytes skip the media cache so they can't push songs out of it.
+     */
+    private inner class SongSourceFactory(
+        private val audio: DefaultMediaSourceFactory,
+        video: DataSource.Factory,
+    ) : MediaSource.Factory {
+        private val videoSources = ProgressiveMediaSource.Factory(video)
+
+        override fun setDrmSessionManagerProvider(provider: DrmSessionManagerProvider) = apply {
+            audio.setDrmSessionManagerProvider(provider)
+            videoSources.setDrmSessionManagerProvider(provider)
+        }
+
+        override fun setLoadErrorHandlingPolicy(policy: LoadErrorHandlingPolicy) = apply {
+            audio.setLoadErrorHandlingPolicy(policy)
+            videoSources.setLoadErrorHandlingPolicy(policy)
+        }
+
+        override fun getSupportedTypes(): IntArray = audio.supportedTypes
+
+        override fun createMediaSource(mediaItem: MediaItem): MediaSource {
+            val audioSource = audio.createMediaSource(mediaItem)
+            val id = mediaItem.mediaId
+            val container = app.container
+            if (!container.settings.videoMode.value || !container.streams.hasVideo(id)) return audioSource
+            val videoSource = videoSources.createMediaSource(
+                MediaItem.Builder().setMediaId(id).setUri("$VIDEO_SCHEME:$id").build(),
+            )
+            return MergingMediaSource(/* adjustPeriodTimeOffsets = */ true, /* clipDurations = */ true, audioSource, videoSource)
+        }
+    }
+
+    private fun videoDataSourceFactory(): ResolvingDataSource.Factory {
+        val upstream = DefaultDataSource.Factory(this, OkHttpDataSource.Factory(app.container.http))
+        return ResolvingDataSource.Factory(upstream) { spec: DataSpec ->
+            if (spec.uri.scheme != VIDEO_SCHEME) return@Factory spec
+            val videoId = spec.uri.schemeSpecificPart
+            val video = try {
+                runBlocking { app.container.streams.resolveVideo(videoId) }
+            } catch (e: Exception) {
+                throw HttpDataSource.HttpDataSourceException(
+                    IOException(e.message, e), spec,
+                    PlaybackException.ERROR_CODE_IO_NETWORK_CONNECTION_FAILED,
+                    HttpDataSource.HttpDataSourceException.TYPE_OPEN,
+                )
+            }
+            spec.withUri(video.url.toUri()).withRequestHeaders(spec.httpRequestHeaders + video.headers)
+        }
+    }
+
     private fun attachEnhancer(sessionId: Int) {
         enhancer?.release()
         enhancer = if (sessionId == C.AUDIO_SESSION_ID_UNSET) null else
@@ -214,6 +293,7 @@ class PlaybackService : MediaSessionService() {
 
     companion object {
         const val SCHEME = "yt"
+        const val VIDEO_SCHEME = "ytv"
         const val MAX_CUT_DB = 15.0
         const val MAX_BOOST_DB = 6.0
     }

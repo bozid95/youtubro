@@ -108,8 +108,8 @@ class MusicRepository(private val songs: SongDao) {
      * YouTube Music's radio for a song: the song itself, then what it would play next. Music videos
      * that also exist as audio tracks come back as the audio track, which is usually the cleaner mix.
      */
-    suspend fun radio(videoId: String): Radio {
-        val result = YouTube.next(WatchEndpoint(videoId = videoId), preferAudio = true).getOrNull()
+    suspend fun radio(videoId: String, preferAudio: Boolean = true): Radio {
+        val result = YouTube.next(WatchEndpoint(videoId = videoId), preferAudio = preferAudio).getOrNull()
             ?: return Radio(emptyList(), 0)
         val tracks = result.items.map { it.toTrack() }
         return Radio(tracks, (result.currentIndex ?: tracks.indexOfFirst { it.id == videoId }).coerceIn(0, (tracks.size - 1).coerceAtLeast(0)))

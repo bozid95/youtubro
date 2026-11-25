@@ -131,6 +131,34 @@ internal class InnerTubeXStreams(
         )
     }
 
+    /** The video-only stream for a song, up to [maxHeight]p. Audio still comes from [resolve]. */
+    @OptIn(kotlin.time.ExperimentalTime::class)
+    suspend fun resolveVideo(videoId: String, maxHeight: Int): ResolvedVideo? {
+        val e = engine()
+        mirrorSession(e.innerTube)
+        val hints = ContentHints(isUploaded = false, wantVideo = true, maxVideoHeight = maxHeight)
+            .withPremium(false)
+            .withStreamCapabilities(allowHls = false, allowSabr = false, allowBoundedRange = false)
+
+        val stream = withTimeoutOrNull(GIVE_UP_MS) {
+            e.extractor.extract(
+                videoId = videoId,
+                hints = hints,
+                excludedClients = emptySet(),
+                audioQuality = XAudioQuality.HIGH,
+                clientPlaybackNonce = generateClientPlaybackNonce(),
+            )
+        } ?: return null
+        val url = stream.videoUrl?.takeIf { it.isNotBlank() } ?: return null
+        return ResolvedVideo(
+            url = url,
+            headers = stream.headers,
+            expiresAtMs = stream.expiresAt?.toEpochMilliseconds() ?: (System.currentTimeMillis() + DEFAULT_LINK_LIFE_MS),
+            height = stream.videoHeight,
+            codec = stream.videoCodecs ?: stream.videoMimeType,
+        )
+    }
+
     private fun mirrorSession(innerTube: InnerTubeX) {
         val locale = XLocale(gl = YouTube.locale.gl, hl = YouTube.locale.hl)
         val visitor = YouTube.visitorData

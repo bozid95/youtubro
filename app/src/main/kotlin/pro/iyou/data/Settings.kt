@@ -13,12 +13,22 @@ class Settings(context: Context) {
     /** Even out loudness between songs, the way the YouTube apps do. */
     val normalize: StateFlow<Boolean> = _normalize.asStateFlow()
 
+    private val _videoMode = MutableStateFlow(prefs.getBoolean(KEY_VIDEO, false))
+    /** Play the video along with the audio ("Video" side of the Song / Video switch). */
+    val videoMode: StateFlow<Boolean> = _videoMode.asStateFlow()
+
     fun setNormalize(on: Boolean) {
         _normalize.value = on
         prefs.edit().putBoolean(KEY_NORMALIZE, on).apply()
     }
 
+    fun setVideoMode(on: Boolean) {
+        _videoMode.value = on
+        prefs.edit().putBoolean(KEY_VIDEO, on).apply()
+    }
+
     private companion object {
         const val KEY_NORMALIZE = "normalize_volume"
+        const val KEY_VIDEO = "video_mode"
     }
 }

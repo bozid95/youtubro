@@ -160,6 +160,9 @@ fun FullPlayer(state: PlayerState, onCollapse: () -> Unit) {
         label = "art",
     )
     var showQueue by remember { mutableStateOf(false) }
+    val settings = LocalContext.current.app.container.settings
+    val videoMode by settings.videoMode.collectAsState()
+    val landscape = isLandscape()
 
     // dragging the slider shouldn't fight the 500 ms position ticks
     var scrubbing by remember { mutableStateOf(false) }
@@ -193,20 +196,20 @@ fun FullPlayer(state: PlayerState, onCollapse: () -> Unit) {
                 IconButton(onClick = onCollapse, modifier = Modifier.padding(start = 0.dp)) {
                     Icon(Icons.Rounded.KeyboardArrowDown, "Tutup", tint = Palette.Text, modifier = Modifier.size(30.dp))
                 }
-                Text(
-                    "SEDANG DIPUTAR",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Palette.Text.copy(alpha = 0.7f),
-                    modifier = Modifier.weight(1f),
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                )
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    ModeSwitch(videoMode, onChange = { settings.setVideoMode(it) })
+                }
                 IconButton(onClick = { showQueue = true }) {
                     Icon(Icons.AutoMirrored.Rounded.QueueMusic, "Antrean", tint = Palette.Text)
                 }
             }
 
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Artwork(
+                if (videoMode) {
+                    // sideways, the full-screen video takes over; drawing it here too would steal its surface
+                    val ratio = state.videoAspect ?: (16f / 9f)
+                    if (!landscape) InlineVideo(state, Modifier.aspectRatio(ratio, matchHeightConstraintsFirst = ratio < 1f))
+                } else Artwork(
                     track.thumbnail,
                     Modifier
                         .fillMaxWidth()

@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
         )
         super.onCreate(savedInstanceState)
 
-        player = PlayerConnection(this, lifecycleScope, app.container.repository)
+        player = PlayerConnection(this, lifecycleScope, app.container.repository, app.container.settings)
         if (savedInstanceState == null) links.value = DeepLink.from(intent)
 
         // Android 13+ asks before showing the media notification
@@ -54,6 +54,16 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         DeepLink.from(intent)?.let { links.value = it }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        player.setForeground(true)
+    }
+
+    override fun onStop() {
+        player.setForeground(false)
+        super.onStop()
     }
 
     override fun onDestroy() {

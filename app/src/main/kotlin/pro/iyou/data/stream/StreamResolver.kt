@@ -25,6 +25,15 @@ data class ResolvedStream(
     val info: StreamInfo,
 )
 
+/** A video-only stream, played next to the audio one in video mode. */
+data class ResolvedVideo(
+    val url: String,
+    val headers: Map<String, String>,
+    val expiresAtMs: Long,
+    val height: Int?,
+    val codec: String?,
+)
+
 /**
  * Turns a video id into a playable audio URL.
  *
@@ -41,6 +50,8 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
         poTokens.poTokenFor(videoId, sessionId)
     }
     private val cache = ConcurrentHashMap<String, ResolvedStream>()
+    private val videoCache = ConcurrentHashMap<String, ResolvedVideo>()
+    private val noVideo = ConcurrentHashMap.newKeySet<String>()
     private val infoStore = StreamInfoStore(context)
 
     /** Format and loudness of every song resolved so far, by video id. */
@@ -52,6 +63,27 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
 
     fun invalidate(videoId: String) {
         cache.remove(videoId)
+        videoCache.remove(videoId)
+    }
+
+    /** Songs whose video wouldn't load this session; they fall back to audio only. */
+    fun markVideoFailed(videoId: String) {
+        noVideo += videoId
+        videoCache.remove(videoId)
+    }
+
+    fun hasVideo(videoId: String): Boolean = videoId !in noVideo
+
+    suspend fun resolveVideo(videoId: String): ResolvedVideo = withContext(Dispatchers.IO) {
+        videoCache[videoId]?.takeIf { it.expiresAtMs - System.currentTimeMillis() > SAFETY_MARGIN_MS }
+            ?.let { return@withContext it }
+        val video = runCatching { innerTubeX.resolveVideo(videoId, MAX_VIDEO_HEIGHT) }
+            .onFailure { Timber.w(it, "Video failed for $videoId") }
+            .getOrNull()
+            ?: throw IOException("No video stream for $videoId")
+        Timber.i("Video for $videoId: ${video.height}p ${video.codec}")
+        videoCache[videoId] = video
+        video
     }
 
     suspend fun resolve(videoId: String): ResolvedStream = withContext(Dispatchers.IO) {
@@ -176,6 +208,7 @@ class StreamResolver(context: Context, private val http: OkHttpClient) {
     private companion object {
         const val SAFETY_MARGIN_MS = 60_000L
         const val PROBE_FALLBACK_BYTE = 2_000_000L
+        const val MAX_VIDEO_HEIGHT = 720
 
         val WALK_CLIENTS = listOf(YouTubeClient.VISIONOS, YouTubeClient.WEB_REMIX, YouTubeClient.WEB)
 
